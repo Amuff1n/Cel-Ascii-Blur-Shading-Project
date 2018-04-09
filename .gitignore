@@ -3,4 +3,5 @@
 !*.cpp
 !*.h
 !*.md
+!MacMakefile
 !.gitignore

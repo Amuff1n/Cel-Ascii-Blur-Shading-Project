@@ -1,0 +1,2 @@
+cab: main.cpp
+	g++ main.cpp -o CAB -framework SDL2 -framework OpenGL
