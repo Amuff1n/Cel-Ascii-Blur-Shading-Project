@@ -23,7 +23,8 @@ Currently opens up a black window using SDL2.
 11. Under Linker -> Input -> Additional Dependencies add the following in the textbox:
 ```OpenGL32.lib
 SDL2.lib
-SDL2main.lib```
+SDL2main.lib
+```
 12. Under Linker -> System -> SubSystem select "Console"
 13. Make sure to hit Apply!
 14. Copy "Cel-Ascii-Blur-Shading-Project\lib\SDL2-2.0.8\lib\x86\SDL2.dll" (ie. copy the dll file in that location) to "C:\Windows\SysWOW64" and "C:\Windows\SysWOW64"
