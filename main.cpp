@@ -1,11 +1,20 @@
 //
 //  main.cpp
 //  CelAsciiBlur
-//
-//  Created by Anthony Rossello on 4/6/18.
-//  Copyright © 2018 Anthony Rossello. All rights reserved.
-//
+
+
+#ifdef _WIN32
+#include "WindowsInclude.h"
+#endif
+
+#ifdef __APPLE__
 #include "MacInclude.h"
+#endif
+
+#ifdef __linux__
+#include "LinuxInclude.h"
+#endif
+
 #include <iostream>
 
 const char NAME[] = "Computer Graphics Project";
@@ -28,7 +37,9 @@ int main(int argc, char *argv[])
     }
     
     // Necessary on Mac
+	#ifdef __APPLE__
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
+	#endif
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3);
     
@@ -59,8 +70,9 @@ int main(int argc, char *argv[])
     SDL_GL_SetSwapInterval(1);
     
     // Clear to black
-    glClearColor ( 0.0, 0.0, 1.0, 1.0 );
-    glClear ( GL_COLOR_BUFFER_BIT );
+    glClearColor ( 0.0f, 0.0f, 0.0f, 1.0f );
+    glClear ( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
+	SDL_GL_SwapWindow(window);
     
     // SDL event loop
     RUNNING = true;

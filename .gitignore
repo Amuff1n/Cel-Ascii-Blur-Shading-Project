@@ -4,4 +4,6 @@
 !*.h
 !*.md
 !MacMakefile
+/lib/*
+/.vs/*
 !.gitignore
