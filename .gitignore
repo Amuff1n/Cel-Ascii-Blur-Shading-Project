@@ -1,11 +1,1 @@
-*
-!*/
-!*.cpp
-!*.h
-!*.md
-!MacMakefile
-/lib/*
-/.vs/*
-/glm/*
-/.vscode/*
-!.gitignore
+
