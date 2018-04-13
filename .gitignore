@@ -6,4 +6,6 @@
 !MacMakefile
 /lib/*
 /.vs/*
+/glm/*
+/.vscode/*
 !.gitignore
