@@ -379,9 +379,9 @@ void asciiCharacterMode() {
 				}
 			}
 
-			r_avg = r_avg / 64;
-			g_avg = g_avg / 64;
-			b_avg = b_avg / 64;
+			r_avg = r_avg / 104;
+			g_avg = g_avg / 104;
+			b_avg = b_avg / 104;
 			glColor3f(r_avg, g_avg, b_avg);
 
 			GLfloat greyscale = (r_avg + g_avg + b_avg) / 3;
