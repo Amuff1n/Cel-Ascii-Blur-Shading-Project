@@ -31,6 +31,7 @@ GLboolean  bounding_box = GL_FALSE;	/* bounding box on? */
 GLboolean  performance = GL_FALSE;	/* performance counter on? */
 GLboolean  stats = GL_FALSE;		/* statistics on? */
 GLboolean  ascii = GL_FALSE;
+GLboolean  cel_shading = GL_FALSE;
 GLuint     material_mode = 0;		/* 0=none, 1=color, 2=material */
 GLint      entries = 0;			    /* entries in model menu */
 GLdouble   pan_x = 0.0;
@@ -343,6 +344,89 @@ void asciiPostProcess() {
 	glDrawPixels(width, height, GL_RGB, GL_FLOAT, pixels);
 }
 
+typedef struct tag_matrix
+{
+    float data[16];
+} matrix;
+
+typedef struct tag_vector3
+{
+    float x;
+    float y;
+    float z;
+} vector3;
+
+typedef struct tag_vertex
+{
+    float x;
+    float y;
+    float z;
+} vertex;
+
+float dot(vector3 a, vector3 b)
+{
+    return a.x * b.x + a.y * b.y + a.z * b.z;
+}
+
+float magnitude(vector3 v)
+{
+    return sqrtf(v.x * v.x + v.y * v.y + v.z * v.z);
+}
+
+void normalize(vector3 v)
+{
+    float m = magnitude(v);
+    if (m != 0)
+    {
+        v.x = v.x / m;
+        v.y = v.y / m;
+        v.z = v.z / m;
+    }
+}
+
+void display_cel_shade()
+{
+    // Some initial setup
+    glDisable(GL_LINE_SMOOTH);
+    glDisable(GL_LIGHTING);
+
+    // Define the light direction
+    vector3 light_dir;
+    light_dir.x = 0;
+    light_dir.y = 0;
+    light_dir.z = -1;
+    normalize(light_dir);
+
+    // For storing vertices and normals
+    float temp_color;
+    vertex vertex0, vertex1, vertex2;
+    vector3 normal0, normal1, normal2;
+
+    // Clear the buffers
+    glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+    // Render?
+    glBegin(GL_TRIANGLES);
+    GLMgroup* group = model->groups;
+    for(int group_index = 0; group_index < model->numgroups; ++group_index)
+    {
+        for(int triangle = 0; triangle < group->numtriangles; ++triangle)
+        {
+            vertex0.x = model->vertices[3*model->triangles[group->triangles[triangle]].vindices[0]];
+            vertex0.y = model->vertices[3*model->triangles[group->triangles[triangle]].vindices[0] + 1];
+            vertex0.z = model->vertices[3*model->triangles[group->triangles[triangle]].vindices[0] + 2];
+
+        }
+    }
+
+    // This stuff is incomplete
+
+    glEnd();
+    glutSwapBuffers();
+
+}
+
 #define NUM_FRAMES 5
 void
 display(void)
@@ -424,6 +508,18 @@ display(void)
     glEnable(GL_LIGHTING);
 }
 
+void display_wrapper()
+{
+    if(cel_shading)
+    {
+        display_cel_shade();
+    }
+    else
+    {
+        display();
+    }
+}
+
 void
 keyboard(unsigned char key, int x, int y)
 {
@@ -451,6 +547,10 @@ keyboard(unsigned char key, int x, int y)
 	case 'a':
 		ascii = !ascii;
 		break;
+    
+    case 'q':
+        cel_shading = !cel_shading;
+        break;
         
     case 't':
         stats = !stats;
@@ -696,7 +796,7 @@ main(int argc, char** argv)
     glutCreateWindow("Smooth");
     
     glutReshapeFunc(reshape);
-    glutDisplayFunc(display);
+    glutDisplayFunc(display_wrapper);
     glutKeyboardFunc(keyboard);
     glutMouseFunc(mouse);
     glutMotionFunc(motion);
