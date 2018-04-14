@@ -30,7 +30,7 @@ GLboolean  facet_normal = GL_FALSE;	/* draw with facet normal? */
 GLboolean  bounding_box = GL_FALSE;	/* bounding box on? */
 GLboolean  performance = GL_FALSE;	/* performance counter on? */
 GLboolean  stats = GL_FALSE;		/* statistics on? */
-GLboolean  ascii = GL_FALSE;
+GLuint	   ascii = 0;				/* toggle ascii effect*/
 GLuint     material_mode = 0;		/* 0=none, 1=color, 2=material */
 GLint      entries = 0;			    /* entries in model menu */
 GLdouble   pan_x = 0.0;
@@ -184,14 +184,16 @@ reshape(int width, int height)
     glTranslatef(0.0, 0.0, -3.0);
 }
 
+static GLfloat pixels[512][512][3];
+
 void asciiPostProcess() {
 	int height = glutGet(GLUT_WINDOW_HEIGHT);
 	int width = glutGet(GLUT_WINDOW_WIDTH);
 	//TODO dynamically change pixel buffer size to window size
 	//GLfloat* pixels = (GLfloat*) malloc(width * height * 3 * sizeof(GLfloat));
-	static GLfloat pixels[512][512][3];
+	
 	glReadPixels(0, 0, width, height, GL_RGB, GL_FLOAT, pixels); //get frame buffer, hardcoded to 512 by 512 for now
-																 //scan pixels in 5x5 square
+																 //scan pixels in 8x8 square
 	for (int i = 0; i < width; i = i + 8) {
 		for (int j = 0; j < height; j = j + 8) {
 			//average rgb components separately
@@ -214,7 +216,7 @@ void asciiPostProcess() {
 			GLfloat greyscale = (r_avg + g_avg + b_avg) / 3;
 
 			//replace 8x8 square with # if not pure black or white for now
-			if (greyscale > 0 || greyscale < 1) {
+			if (greyscale != 1.f) {
 
 				//poor man's bitmap of . symbol
 				// 1/64 = 0.015
@@ -343,6 +345,84 @@ void asciiPostProcess() {
 	glDrawPixels(width, height, GL_RGB, GL_FLOAT, pixels);
 }
 
+void asciiCharacterMode() {
+	int height = glutGet(GLUT_WINDOW_HEIGHT);
+	int width = glutGet(GLUT_WINDOW_WIDTH);
+
+	glReadPixels(0, 0, width, height, GL_RGB, GL_FLOAT, pixels); //get frame buffer, hardcoded to 512 by 512 for now
+
+	glClearColor(0.0, 0.0, 0.0, 1.0);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+	glDisable(GL_DEPTH_TEST);
+	glMatrixMode(GL_PROJECTION);
+	glPushMatrix();
+	glLoadIdentity();
+	glOrtho(0, glutGet(GLUT_WINDOW_WIDTH), 0, glutGet(GLUT_WINDOW_HEIGHT), -1, 1);
+	glMatrixMode(GL_MODELVIEW);
+	glPushMatrix();
+	glLoadIdentity();
+
+	//using 8 by 13 bitmap characters
+	for (int i = 0; i < width; i = i + 8) {
+		for (int j = 0; j < height - 13; j = j + 13) {
+			//average rgb components separately
+			GLfloat r_avg = 0.f;
+			GLfloat g_avg = 0.f;
+			GLfloat b_avg = 0.f;
+			for (int k = 0; k < 8; k++) {
+				for (int l = 0; l < 13; l++) {
+					//discard pixel in averaging if completely black (or white?)
+					r_avg += pixels[i + k][j + l][0];
+					g_avg += pixels[i + k][j + l][1];
+					b_avg += pixels[i + k][j + l][2];
+				}
+			}
+
+			r_avg = r_avg / 64;
+			g_avg = g_avg / 64;
+			b_avg = b_avg / 64;
+			glColor3f(r_avg, g_avg, b_avg);
+
+			GLfloat greyscale = (r_avg + g_avg + b_avg) / 3;
+
+			glRasterPos2f(j, i);
+
+			if (greyscale > 0.5) {
+				//draw # character
+				glutBitmapCharacter(GLUT_BITMAP_8_BY_13, '#');
+			}
+			else if (greyscale > 0.35) {
+				//draw * character
+				glutBitmapCharacter(GLUT_BITMAP_8_BY_13, '*');
+			}
+			else if (greyscale > 0.25) {
+				//draw 8 character
+				glutBitmapCharacter(GLUT_BITMAP_8_BY_13, '8');
+			}
+			else if (greyscale > 0.15) {
+				//draw n character
+				glutBitmapCharacter(GLUT_BITMAP_8_BY_13, 'n');
+			}
+			else if (greyscale > 0.1) {
+				//draw : character
+				glutBitmapCharacter(GLUT_BITMAP_8_BY_13, ':');
+			}
+			else if (greyscale > 0) {
+				//draw . character
+				glutBitmapCharacter(GLUT_BITMAP_8_BY_13, '.');
+			}
+		}
+	}
+
+	glRasterPos2i(0, 0); //reset raster pos, or else drawpixels will be off later
+	glMatrixMode(GL_PROJECTION);
+	glPopMatrix();
+	glMatrixMode(GL_MODELVIEW);
+	glPopMatrix();
+	glEnable(GL_DEPTH_TEST);
+}
+
 #define NUM_FRAMES 5
 void
 display(void)
@@ -351,7 +431,7 @@ display(void)
     static char* p;
     static int frames = 0;
     
-    glClearColor(1.0, 1.0, 1.0, 1.0);
+    glClearColor(0.0, 0.0, 0.0, 0.0);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     
     glPushMatrix();
@@ -382,7 +462,7 @@ display(void)
 #endif
     
 	/* post-processing ascii affect*/
-	if (ascii) {
+	if (ascii == 1) {
 		asciiPostProcess();
 	}
 
@@ -397,6 +477,10 @@ display(void)
     }
     
     glPopMatrix();
+
+	if (ascii == 2) {
+		asciiCharacterMode();
+	}
     
     if (stats) {
         /* XXX - this could be done a _whole lot_ faster... */
@@ -449,7 +533,10 @@ keyboard(unsigned char key, int x, int y)
         break;
 
 	case 'a':
-		ascii = !ascii;
+		ascii++;
+		if (ascii > 2) {
+			ascii = 0;
+		}
 		break;
         
     case 't':
