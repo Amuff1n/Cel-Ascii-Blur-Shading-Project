@@ -1,0 +1,43 @@
+﻿  smooth.c
+c:\users\droid\source\repos\cel-ascii-blur-shading-project\dirent32.h(40): warning C4996: 'strcpy': This function or variable may be unsafe. Consider using strcpy_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+  C:\Program Files (x86)\Windows Kits\10\Include\10.0.16299.0\ucrt\string.h(132): note: see declaration of 'strcpy'
+c:\users\droid\source\repos\cel-ascii-blur-shading-project\dirent32.h(46): warning C4996: 'strcat': This function or variable may be unsafe. Consider using strcat_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+  C:\Program Files (x86)\Windows Kits\10\Include\10.0.16299.0\ucrt\string.h(89): note: see declaration of 'strcat'
+c:\users\droid\source\repos\cel-ascii-blur-shading-project\dirent32.h(49): warning C4996: 'strcat': This function or variable may be unsafe. Consider using strcat_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+  C:\Program Files (x86)\Windows Kits\10\Include\10.0.16299.0\ucrt\string.h(89): note: see declaration of 'strcat'
+c:\users\droid\source\repos\cel-ascii-blur-shading-project\dirent32.h(83): warning C4996: 'strcpy': This function or variable may be unsafe. Consider using strcpy_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+  C:\Program Files (x86)\Windows Kits\10\Include\10.0.16299.0\ucrt\string.h(132): note: see declaration of 'strcpy'
+smooth.c(28): warning C4305: 'initializing': truncation from 'double' to 'GLfloat'
+smooth.c(61): warning C4244: '=': conversion from 'time_t' to 'long', possible loss of data
+smooth.c(116): warning C4305: 'initializing': truncation from 'double' to 'GLfloat'
+smooth.c(117): warning C4305: 'initializing': truncation from 'double' to 'GLfloat'
+smooth.c(387): warning C4090: '=': different 'const' qualifiers
+smooth.c(390): warning C4090: '=': different 'const' qualifiers
+smooth.c(393): warning C4090: '=': different 'const' qualifiers
+smooth.c(396): warning C4090: '=': different 'const' qualifiers
+smooth.c(399): warning C4090: '=': different 'const' qualifiers
+smooth.c(402): warning C4090: '=': different 'const' qualifiers
+smooth.c(491): warning C4018: '<': signed/unsigned mismatch
+smooth.c(493): warning C4018: '<': signed/unsigned mismatch
+smooth.c(481): warning C4101: 'vertex2': unreferenced local variable
+smooth.c(482): warning C4101: 'normal0': unreferenced local variable
+smooth.c(482): warning C4101: 'normal2': unreferenced local variable
+smooth.c(481): warning C4101: 'vertex1': unreferenced local variable
+smooth.c(482): warning C4101: 'normal1': unreferenced local variable
+smooth.c(480): warning C4101: 'temp_color': unreferenced local variable
+smooth.c(522): warning C4244: 'function': conversion from 'GLdouble' to 'GLfloat', possible loss of data
+smooth.c(572): warning C4996: 'sprintf': This function or variable may be unsafe. Consider using sprintf_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+  C:\Program Files (x86)\Windows Kits\10\Include\10.0.16299.0\ucrt\stdio.h(1772): note: see declaration of 'sprintf'
+smooth.c(583): warning C4996: 'sprintf': This function or variable may be unsafe. Consider using sprintf_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+  C:\Program Files (x86)\Windows Kits\10\Include\10.0.16299.0\ucrt\stdio.h(1772): note: see declaration of 'sprintf'
+smooth.c(694): warning C4305: 'function': truncation from 'double' to 'GLfloat'
+smooth.c(710): warning C4305: '+=': truncation from 'double' to 'GLfloat'
+smooth.c(733): warning C4244: 'function': conversion from 'double' to 'GLfloat', possible loss of data
+smooth.c(781): warning C4996: 'strcpy': This function or variable may be unsafe. Consider using strcpy_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+  C:\Program Files (x86)\Windows Kits\10\Include\10.0.16299.0\ucrt\string.h(132): note: see declaration of 'strcpy'
+smooth.c(782): warning C4996: 'strcat': This function or variable may be unsafe. Consider using strcat_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+  C:\Program Files (x86)\Windows Kits\10\Include\10.0.16299.0\ucrt\string.h(89): note: see declaration of 'strcat'
+smooth.c(886): warning C4113: 'void (__cdecl *)()' differs in parameter lists from 'void (__cdecl *)(void)'
+  gltb.c
+gltb.c(11): fatal error C1083: Cannot open include file: 'GLUT/glut.h': No such file or directory
+  Generating Code...

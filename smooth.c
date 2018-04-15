@@ -31,6 +31,7 @@ GLboolean  bounding_box = GL_FALSE;	/* bounding box on? */
 GLboolean  performance = GL_FALSE;	/* performance counter on? */
 GLboolean  stats = GL_FALSE;		/* statistics on? */
 GLboolean  ascii = GL_FALSE;
+GLboolean  blurring = GL_FALSE;
 GLboolean  cel_shading = GL_FALSE;
 GLuint     material_mode = 0;		/* 0=none, 1=color, 2=material */
 GLint      entries = 0;			    /* entries in model menu */
@@ -183,6 +184,84 @@ reshape(int width, int height)
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
     glTranslatef(0.0, 0.0, -3.0);
+}
+
+GLfloat blurR(int i, int j, GLfloat array[512][512][3], GLfloat filter[3][3])
+{
+	GLfloat avg = 0;
+
+	avg = avg + (filter[0][0])*(array[i - 1][j - 1][0]);	//1
+	avg = avg + (filter[0][1])*(array[i - 1][j][0]);		//2
+	avg = avg + (filter[0][2])*(array[i - 1][j + 1][0]);	//3
+	avg = avg + (filter[1][0])*(array[i][j - 1][0]);		//4
+	avg = avg + (filter[1][1])*(array[i][j][0]);			//5
+	avg = avg + (filter[1][2])*(array[i][j + 1][0]);		//6
+	avg = avg + (filter[2][0])*(array[i + 1][j - 1][0]);	//7
+	avg = avg + (filter[2][1])*(array[i + 1][j][0]);		//8
+	avg = avg + (filter[2][2])*(array[i + 1][j + 1][0]);	//9
+	return avg;
+}
+
+GLfloat blurG(int i, int j, GLfloat array[512][512][3], GLfloat filter[3][3])
+{
+	GLfloat avg = 0;
+
+	avg = avg + (filter[0][0])*(array[i - 1][j - 1][1]);	//1
+	avg = avg + (filter[0][1])*(array[i - 1][j][1]);		//2
+	avg = avg + (filter[0][2])*(array[i - 1][j + 1][1]);	//3
+	avg = avg + (filter[1][0])*(array[i][j - 1][1]);		//4
+	avg = avg + (filter[1][1])*(array[i][j][1]);			//5
+	avg = avg + (filter[1][2])*(array[i][j + 1][1]);		//6
+	avg = avg + (filter[2][0])*(array[i + 1][j - 1][1]);	//7
+	avg = avg + (filter[2][1])*(array[i + 1][j][1]);		//8
+	avg = avg + (filter[2][2])*(array[i + 1][j + 1][1]);	//9
+	return avg;
+}
+
+GLfloat blurB(int i, int j, GLfloat array[512][512][3], GLfloat filter[3][3])
+{
+	GLfloat avg = 0;
+
+	avg = avg + (filter[0][0])*(array[i - 1][j - 1][2]);	//1
+	avg = avg + (filter[0][1])*(array[i - 1][j][2]);		//2
+	avg = avg + (filter[0][2])*(array[i - 1][j + 1][2]);	//3
+	avg = avg + (filter[1][0])*(array[i][j - 1][2]);		//4
+	avg = avg + (filter[1][1])*(array[i][j][2]);			//5
+	avg = avg + (filter[1][2])*(array[i][j + 1][2]);		//6
+	avg = avg + (filter[2][0])*(array[i + 1][j - 1][2]);	//7
+	avg = avg + (filter[2][1])*(array[i + 1][j][2]);		//8
+	avg = avg + (filter[2][2])*(array[i + 1][j + 1][2]);	//9
+	return avg;
+}
+
+void blurringPostProcess() {
+	int height = glutGet(GLUT_WINDOW_HEIGHT);
+	int width = glutGet(GLUT_WINDOW_WIDTH);
+
+	GLfloat boxFilter[3][3] = { { 0.111f, 0.111f, 0.111f },{ 0.111f, 0.111f, 0.111f },{ 0.111f, 0.111f, 0.111f } };
+	//GLfloat boxFilter[3][3] = { { 0.1f, 0.1f, 0.1f },{ 0.1f, 0.1f, 0.1f },{ 0.1f, 0.1f, 0.1f } };
+	GLfloat gaussianFilter[3][3] = { { 0.0625f, 0.125f, 0.0625f },{ 0.125f, 0.25f, 0.125f },{ 0.0625f, 0.125f, 0.0625f } };
+
+	static GLfloat pixels[512][512][3];
+	glReadPixels(0, 0, width, height, GL_RGB, GL_FLOAT, pixels);
+
+	//static GLint pixels[512][512][3];
+	//glReadPixels(0, 0, width, height, GL_RGB, GL_INT, pixels);
+
+	for (int x = 1; x < 511; x++)
+	{
+		for (int y = 1; y < 511; y++)
+		{
+			GLfloat value[3] = { blurR(x, y, pixels, boxFilter), blurG(x, y, pixels, boxFilter), blurB(x, y, pixels, boxFilter) };
+
+			pixels[x][y][0] = value[0];		// red		(channel 0)
+			pixels[x][y][1] = value[1];		// green	(channel 1)
+			pixels[x][y][2] = value[2];		// blue		(channel 2)			
+		}
+	}
+
+	glDrawPixels(width, height, GL_RGB, GL_FLOAT, pixels);
+	//glDrawPixels(width, height, GL_RGB, GL_INT, pixels);
 }
 
 void asciiPostProcess() {
@@ -470,6 +549,10 @@ display(void)
 		asciiPostProcess();
 	}
 
+	if (blurring) {
+		blurringPostProcess();
+	}
+
     glDisable(GL_LIGHTING);
     if (bounding_box) {
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -592,7 +675,11 @@ keyboard(unsigned char key, int x, int y)
     case 'b':
         bounding_box = !bounding_box;
         break;
-        
+    
+	case 'B':
+		blurring = !blurring;
+		break;
+
     case 'n':
         facet_normal = !facet_normal;
         lists();
@@ -824,6 +911,7 @@ main(int argc, char** argv)
     glutAddMenuEntry("[c]   Toggle culling on/off", 'c');
     glutAddMenuEntry("[n]   Toggle face/smooth normals", 'n');
     glutAddMenuEntry("[b]   Toggle bounding box on/off", 'b');
+	glutAddMenuEntry("[B]   Toggle blurring effect", 'B');
     glutAddMenuEntry("[p]   Toggle frame rate on/off", 'p');
     glutAddMenuEntry("[t]   Toggle model statistics", 't');
     glutAddMenuEntry("[m]   Toggle color/material/none mode", 'm');
