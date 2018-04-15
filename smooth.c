@@ -185,6 +185,95 @@ reshape(int width, int height)
     glTranslatef(0.0, 0.0, -3.0);
 }
 
+void cel_shade_post_process()
+{
+    int height = glutGet(GLUT_WINDOW_HEIGHT);
+    int width = glutGet(GLUT_WINDOW_WIDTH);
+    static GLfloat pixels[512][512][3];
+    glReadPixels(0, 0, width, height, GL_RGB, GL_FLOAT, pixels);
+
+    for(int i = 0; i < width; i += 8)
+    {
+        for(int j = 0; j < height; j += 8)
+        {
+            GLfloat r, g, b;
+            GLfloat cr, cg, cb;
+            for(int k = 0; k < 8; ++k)
+            {
+                for(int l = 0; l < 8; ++l)
+                {
+                    r = pixels[i+k][j+l][0];
+                    g = pixels[i+k][j+l][1];
+                    b = pixels[i+k][j+l][2];
+
+                    if(r < 0.125f)
+                        r = 0.0f;
+                    if(r >= 0.125f && r < 0.25f)
+                        r = 0.1875f;
+                    if(r >= 0.25f && r < 0.375f)
+                        r = 0.3125f;
+                    if(r >= 0.375f && r < 0.5f)
+                        r = 0.4375f;
+                    if(r >= 0.5f && r < 0.625f)
+                        r = 0.5625f;
+                    if(r >= 0.625f && r < 0.75f)
+                        r = 0.6875f;
+                    if(r >= 0.625f && r < 0.75f)
+                        r = 0.6875f;
+                    if(r >= 0.75f && r < 0.875f)
+                        r = 0.8125f;
+                    if(r >= 0.875f)
+                        r = 1.0f;
+
+                    if(g < 0.125f)
+                        g = 0.0f;
+                    if(g >= 0.125f && g < 0.25f)
+                        g = 0.1875f;
+                    if(g >= 0.25f && g < 0.375f)
+                        g = 0.3125f;
+                    if(g >= 0.375f && g < 0.5f)
+                        g = 0.4375f;
+                    if(g >= 0.5f && g < 0.625f)
+                        g = 0.5625f;
+                    if(g >= 0.625f && g < 0.75f)
+                        g = 0.6875f;
+                    if(g >= 0.625f && g < 0.75f)
+                        g = 0.6875f;
+                    if(g >= 0.75f && g < 0.875f)
+                        g = 0.8125f;
+                    if(g >= 0.875f)
+                        g = 1.0f;
+
+                    if(b < 0.125f)
+                        b = 0.0f;
+                    if(b >= 0.125f && b < 0.25f)
+                        b = 0.1875f;
+                    if(b >= 0.25f && b < 0.375f)
+                        b = 0.3125f;
+                    if(b >= 0.375f && b < 0.5f)
+                        b = 0.4375f;
+                    if(b >= 0.5f && b < 0.625f)
+                        b = 0.5625f;
+                    if(b >= 0.625f && b < 0.75f)
+                        b = 0.6875f;
+                    if(b >= 0.625f && b < 0.75f)
+                        b = 0.6875f;
+                    if(b >= 0.75f && b < 0.875f)
+                        b = 0.8125f;
+                    if(b >= 0.875f)
+                        b = 1.0f;
+
+                    pixels[i+k][j+l][0] = r;
+                    pixels[i+k][j+l][1] = g;
+                    pixels[i+k][j+l][2] = b;
+
+                }
+            }
+        }
+    }
+    glDrawPixels(width, height, GL_RGB, GL_FLOAT, pixels);
+}
+
 void asciiPostProcess() {
 	int height = glutGet(GLUT_WINDOW_HEIGHT);
 	int width = glutGet(GLUT_WINDOW_WIDTH);
@@ -344,89 +433,6 @@ void asciiPostProcess() {
 	glDrawPixels(width, height, GL_RGB, GL_FLOAT, pixels);
 }
 
-typedef struct tag_matrix
-{
-    float data[16];
-} matrix;
-
-typedef struct tag_vector3
-{
-    float x;
-    float y;
-    float z;
-} vector3;
-
-typedef struct tag_vertex
-{
-    float x;
-    float y;
-    float z;
-} vertex;
-
-float dot(vector3 a, vector3 b)
-{
-    return a.x * b.x + a.y * b.y + a.z * b.z;
-}
-
-float magnitude(vector3 v)
-{
-    return sqrtf(v.x * v.x + v.y * v.y + v.z * v.z);
-}
-
-void normalize(vector3 v)
-{
-    float m = magnitude(v);
-    if (m != 0)
-    {
-        v.x = v.x / m;
-        v.y = v.y / m;
-        v.z = v.z / m;
-    }
-}
-
-void display_cel_shade()
-{
-    // Some initial setup
-    glDisable(GL_LINE_SMOOTH);
-    glDisable(GL_LIGHTING);
-
-    // Define the light direction
-    vector3 light_dir;
-    light_dir.x = 0;
-    light_dir.y = 0;
-    light_dir.z = -1;
-    normalize(light_dir);
-
-    // For storing vertices and normals
-    float temp_color;
-    vertex vertex0, vertex1, vertex2;
-    vector3 normal0, normal1, normal2;
-
-    // Clear the buffers
-    glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-    // Render?
-    glBegin(GL_TRIANGLES);
-    GLMgroup* group = model->groups;
-    for(int group_index = 0; group_index < model->numgroups; ++group_index)
-    {
-        for(int triangle = 0; triangle < group->numtriangles; ++triangle)
-        {
-            vertex0.x = model->vertices[3*model->triangles[group->triangles[triangle]].vindices[0]];
-            vertex0.y = model->vertices[3*model->triangles[group->triangles[triangle]].vindices[0] + 1];
-            vertex0.z = model->vertices[3*model->triangles[group->triangles[triangle]].vindices[0] + 2];
-
-        }
-    }
-
-    // This stuff is incomplete
-
-    glEnd();
-    glutSwapBuffers();
-
-}
-
 #define NUM_FRAMES 5
 void
 display(void)
@@ -464,6 +470,11 @@ display(void)
 #else
     glCallList(model_list);
 #endif
+
+    if (cel_shading)
+    {
+        cel_shade_post_process();
+    }
     
 	/* post-processing ascii affect*/
 	if (ascii) {
@@ -506,18 +517,6 @@ display(void)
     
     glutSwapBuffers();
     glEnable(GL_LIGHTING);
-}
-
-void display_wrapper()
-{
-    if(cel_shading)
-    {
-        display_cel_shade();
-    }
-    else
-    {
-        display();
-    }
 }
 
 void
@@ -796,7 +795,7 @@ main(int argc, char** argv)
     glutCreateWindow("Smooth");
     
     glutReshapeFunc(reshape);
-    glutDisplayFunc(display_wrapper);
+    glutDisplayFunc(display);
     glutKeyboardFunc(keyboard);
     glutMouseFunc(mouse);
     glutMotionFunc(motion);
