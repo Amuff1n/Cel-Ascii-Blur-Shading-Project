@@ -265,6 +265,45 @@ void blurringPostProcess() {
 	//glDrawPixels(width, height, GL_RGB, GL_INT, pixels);
 }
 
+void cel_shade_post_process()
+{
+    int height = glutGet(GLUT_WINDOW_HEIGHT);
+    int width = glutGet(GLUT_WINDOW_WIDTH);
+    static GLfloat pixels[512][512][3];
+    glReadPixels(0, 0, width, height, GL_RGB, GL_FLOAT, pixels);
+
+    for(int i = 0; i < width; i ++)
+    {
+        for(int j = 0; j < height; j ++)
+        {
+            GLfloat r, g, b;
+            GLfloat cr, cg, cb;
+            
+			r = pixels[i][j][0];
+			g = pixels[i][j][1];
+			b = pixels[i][j][2];
+
+			GLfloat greyscale = (r + g + b) / 3;
+
+			if (greyscale > 0.5) {
+				r = r;
+				g = g;
+				b = b;
+			}
+			else {
+				r = r * 0.75;
+				g = g * 0.75;
+				b = b * 0.75;
+			}
+
+			pixels[i][j][0] = r;
+			pixels[i][j][1] = g;
+			pixels[i][j][2] = b;
+        }
+    }
+    glDrawPixels(width, height, GL_RGB, GL_FLOAT, pixels);
+}
+
 void asciiPostProcess() {
 	int height = glutGet(GLUT_WINDOW_HEIGHT);
 	int width = glutGet(GLUT_WINDOW_WIDTH);
@@ -539,6 +578,11 @@ display(void)
 #else
     glCallList(model_list);
 #endif
+
+    if (cel_shading)
+    {
+        cel_shade_post_process();
+    }
     
 	/* post-processing ascii affect*/
 	if (ascii == 1) {
@@ -619,6 +663,8 @@ keyboard(unsigned char key, int x, int y)
         printf("+/-       -  Increase/decrease smoothing angle\n");
         printf("W         -  Write model to file (out.obj)\n");
 		printf("a         -  Toggle ascii effect\n");
+		printf("B		  -  Toggle blur\n");
+		printf("q		  -  Toggle cel-shading\n");
         printf("q/escape  -  Quit\n\n");
         break;
 
@@ -628,7 +674,11 @@ keyboard(unsigned char key, int x, int y)
 			ascii = 0;
 		}
 		break;
-        
+
+	case 'q':
+		cel_shading = !cel_shading;
+		break;
+
     case 't':
         stats = !stats;
         break;
