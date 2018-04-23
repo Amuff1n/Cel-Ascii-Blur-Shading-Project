@@ -192,83 +192,33 @@ void cel_shade_post_process()
     static GLfloat pixels[512][512][3];
     glReadPixels(0, 0, width, height, GL_RGB, GL_FLOAT, pixels);
 
-    for(int i = 0; i < width; i += 8)
+    for(int i = 0; i < width; i ++)
     {
-        for(int j = 0; j < height; j += 8)
+        for(int j = 0; j < height; j ++)
         {
             GLfloat r, g, b;
             GLfloat cr, cg, cb;
-            for(int k = 0; k < 8; ++k)
-            {
-                for(int l = 0; l < 8; ++l)
-                {
-                    r = pixels[i+k][j+l][0];
-                    g = pixels[i+k][j+l][1];
-                    b = pixels[i+k][j+l][2];
+            
+			r = pixels[i][j][0];
+			g = pixels[i][j][1];
+			b = pixels[i][j][2];
 
-                    if(r < 0.125f)
-                        r = 0.0f;
-                    if(r >= 0.125f && r < 0.25f)
-                        r = 0.1875f;
-                    if(r >= 0.25f && r < 0.375f)
-                        r = 0.3125f;
-                    if(r >= 0.375f && r < 0.5f)
-                        r = 0.4375f;
-                    if(r >= 0.5f && r < 0.625f)
-                        r = 0.5625f;
-                    if(r >= 0.625f && r < 0.75f)
-                        r = 0.6875f;
-                    if(r >= 0.625f && r < 0.75f)
-                        r = 0.6875f;
-                    if(r >= 0.75f && r < 0.875f)
-                        r = 0.8125f;
-                    if(r >= 0.875f)
-                        r = 1.0f;
+			GLfloat greyscale = (r + g + b) / 3;
 
-                    if(g < 0.125f)
-                        g = 0.0f;
-                    if(g >= 0.125f && g < 0.25f)
-                        g = 0.1875f;
-                    if(g >= 0.25f && g < 0.375f)
-                        g = 0.3125f;
-                    if(g >= 0.375f && g < 0.5f)
-                        g = 0.4375f;
-                    if(g >= 0.5f && g < 0.625f)
-                        g = 0.5625f;
-                    if(g >= 0.625f && g < 0.75f)
-                        g = 0.6875f;
-                    if(g >= 0.625f && g < 0.75f)
-                        g = 0.6875f;
-                    if(g >= 0.75f && g < 0.875f)
-                        g = 0.8125f;
-                    if(g >= 0.875f)
-                        g = 1.0f;
+			if (greyscale > 0.5) {
+				r = r;
+				g = g;
+				b = b;
+			}
+			else {
+				r = r * 0.75;
+				g = g * 0.75;
+				b = b * 0.75;
+			}
 
-                    if(b < 0.125f)
-                        b = 0.0f;
-                    if(b >= 0.125f && b < 0.25f)
-                        b = 0.1875f;
-                    if(b >= 0.25f && b < 0.375f)
-                        b = 0.3125f;
-                    if(b >= 0.375f && b < 0.5f)
-                        b = 0.4375f;
-                    if(b >= 0.5f && b < 0.625f)
-                        b = 0.5625f;
-                    if(b >= 0.625f && b < 0.75f)
-                        b = 0.6875f;
-                    if(b >= 0.625f && b < 0.75f)
-                        b = 0.6875f;
-                    if(b >= 0.75f && b < 0.875f)
-                        b = 0.8125f;
-                    if(b >= 0.875f)
-                        b = 1.0f;
-
-                    pixels[i+k][j+l][0] = r;
-                    pixels[i+k][j+l][1] = g;
-                    pixels[i+k][j+l][2] = b;
-
-                }
-            }
+			pixels[i][j][0] = r;
+			pixels[i][j][1] = g;
+			pixels[i][j][2] = b;
         }
     }
     glDrawPixels(width, height, GL_RGB, GL_FLOAT, pixels);
