@@ -31,7 +31,7 @@ GLboolean  bounding_box = GL_FALSE;	/* bounding box on? */
 GLboolean  performance = GL_FALSE;	/* performance counter on? */
 GLboolean  stats = GL_FALSE;		/* statistics on? */
 GLuint	   ascii = 0;				/* toggle ascii effect*/
-GLboolean  blurring = GL_FALSE;
+GLuint	   blurring = 0;
 GLboolean  cel_shading = GL_FALSE;
 GLuint     material_mode = 0;		/* 0=none, 1=color, 2=material */
 GLint      entries = 0;			    /* entries in model menu */
@@ -246,14 +246,19 @@ void blurringPostProcess() {
 
 	glReadPixels(0, 0, width, height, GL_RGB, GL_FLOAT, pixels);
 
-	//static GLint pixels[512][512][3];
-	//glReadPixels(0, 0, width, height, GL_RGB, GL_INT, pixels);
+	GLfloat * filter = NULL;
+	if (blurring == 1) {
+		filter = boxFilter;
+	}
+	else if (blurring == 2) {
+		filter = gaussianFilter;
+	}
 
 	for (int x = 1; x < 511; x++)
 	{
 		for (int y = 1; y < 511; y++)
 		{
-			GLfloat value[3] = { blurR(x, y, pixels, boxFilter), blurG(x, y, pixels, boxFilter), blurB(x, y, pixels, boxFilter) };
+			GLfloat value[3] = { blurR(x, y, pixels, filter), blurG(x, y, pixels, filter), blurB(x, y, pixels, filter) };
 
 			pixels[x][y][0] = value[0];		// red		(channel 0)
 			pixels[x][y][1] = value[1];		// green	(channel 1)
@@ -262,7 +267,6 @@ void blurringPostProcess() {
 	}
 
 	glDrawPixels(width, height, GL_RGB, GL_FLOAT, pixels);
-	//glDrawPixels(width, height, GL_RGB, GL_INT, pixels);
 }
 
 void cel_shade_post_process()
@@ -721,7 +725,10 @@ keyboard(unsigned char key, int x, int y)
         break;
     
 	case 'B':
-		blurring = !blurring;
+		blurring++;
+		if (blurring > 2) {
+			blurring = 0;
+		}
 		break;
 
     case 'n':
