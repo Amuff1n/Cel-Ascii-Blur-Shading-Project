@@ -8,7 +8,7 @@
 #include <math.h>
 #include <stdio.h>
 #include <assert.h>
-#include <GLUT/glut.h>
+#include <GL/glut.h>
 #include "gltb.h"
 
 

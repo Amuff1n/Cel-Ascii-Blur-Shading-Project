@@ -30,7 +30,7 @@ GLboolean  facet_normal = GL_FALSE;	/* draw with facet normal? */
 GLboolean  bounding_box = GL_FALSE;	/* bounding box on? */
 GLboolean  performance = GL_FALSE;	/* performance counter on? */
 GLboolean  stats = GL_FALSE;		/* statistics on? */
-GLboolean  ascii = GL_FALSE;
+GLuint	   ascii = 0;				/* toggle ascii effect*/
 GLboolean  blurring = GL_FALSE;
 GLboolean  cel_shading = GL_FALSE;
 GLuint     material_mode = 0;		/* 0=none, 1=color, 2=material */
@@ -38,6 +38,8 @@ GLint      entries = 0;			    /* entries in model menu */
 GLdouble   pan_x = 0.0;
 GLdouble   pan_y = 0.0;
 GLdouble   pan_z = 0.0;
+
+static GLfloat pixels[512][512][3];
 
 
 #if defined(_WIN32)
@@ -242,7 +244,6 @@ void blurringPostProcess() {
 	//GLfloat boxFilter[3][3] = { { 0.1f, 0.1f, 0.1f },{ 0.1f, 0.1f, 0.1f },{ 0.1f, 0.1f, 0.1f } };
 	GLfloat gaussianFilter[3][3] = { { 0.0625f, 0.125f, 0.0625f },{ 0.125f, 0.25f, 0.125f },{ 0.0625f, 0.125f, 0.0625f } };
 
-	static GLfloat pixels[512][512][3];
 	glReadPixels(0, 0, width, height, GL_RGB, GL_FLOAT, pixels);
 
 	//static GLint pixels[512][512][3];
@@ -269,9 +270,9 @@ void asciiPostProcess() {
 	int width = glutGet(GLUT_WINDOW_WIDTH);
 	//TODO dynamically change pixel buffer size to window size
 	//GLfloat* pixels = (GLfloat*) malloc(width * height * 3 * sizeof(GLfloat));
-	static GLfloat pixels[512][512][3];
+	
 	glReadPixels(0, 0, width, height, GL_RGB, GL_FLOAT, pixels); //get frame buffer, hardcoded to 512 by 512 for now
-																 //scan pixels in 5x5 square
+																 //scan pixels in 8x8 square
 	for (int i = 0; i < width; i = i + 8) {
 		for (int j = 0; j < height; j = j + 8) {
 			//average rgb components separately
@@ -294,7 +295,7 @@ void asciiPostProcess() {
 			GLfloat greyscale = (r_avg + g_avg + b_avg) / 3;
 
 			//replace 8x8 square with # if not pure black or white for now
-			if (greyscale > 0 || greyscale < 1) {
+			if (greyscale != 1.f) {
 
 				//poor man's bitmap of . symbol
 				// 1/64 = 0.015
@@ -423,87 +424,82 @@ void asciiPostProcess() {
 	glDrawPixels(width, height, GL_RGB, GL_FLOAT, pixels);
 }
 
-typedef struct tag_matrix
-{
-    float data[16];
-} matrix;
+void asciiCharacterMode() {
+	int height = glutGet(GLUT_WINDOW_HEIGHT);
+	int width = glutGet(GLUT_WINDOW_WIDTH);
 
-typedef struct tag_vector3
-{
-    float x;
-    float y;
-    float z;
-} vector3;
+	glReadPixels(0, 0, width, height, GL_RGB, GL_FLOAT, pixels); //get frame buffer, hardcoded to 512 by 512 for now
 
-typedef struct tag_vertex
-{
-    float x;
-    float y;
-    float z;
-} vertex;
+	glClearColor(0.0, 0.0, 0.0, 1.0);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-float dot(vector3 a, vector3 b)
-{
-    return a.x * b.x + a.y * b.y + a.z * b.z;
-}
+	glDisable(GL_DEPTH_TEST);
+	glMatrixMode(GL_PROJECTION);
+	glPushMatrix();
+	glLoadIdentity();
+	glOrtho(0, glutGet(GLUT_WINDOW_WIDTH), 0, glutGet(GLUT_WINDOW_HEIGHT), -1, 1);
+	glMatrixMode(GL_MODELVIEW);
+	glPushMatrix();
+	glLoadIdentity();
 
-float magnitude(vector3 v)
-{
-    return sqrtf(v.x * v.x + v.y * v.y + v.z * v.z);
-}
+	//using 8 by 13 bitmap characters
+	for (int i = 0; i < width; i = i + 8) {
+		for (int j = 0; j < height - 13; j = j + 13) {
+			//average rgb components separately
+			GLfloat r_avg = 0.f;
+			GLfloat g_avg = 0.f;
+			GLfloat b_avg = 0.f;
+			for (int k = 0; k < 8; k++) {
+				for (int l = 0; l < 13; l++) {
+					//discard pixel in averaging if completely black (or white?)
+					r_avg += pixels[i + k][j + l][0];
+					g_avg += pixels[i + k][j + l][1];
+					b_avg += pixels[i + k][j + l][2];
+				}
+			}
 
-void normalize(vector3 v)
-{
-    float m = magnitude(v);
-    if (m != 0)
-    {
-        v.x = v.x / m;
-        v.y = v.y / m;
-        v.z = v.z / m;
-    }
-}
+			r_avg = r_avg / 104;
+			g_avg = g_avg / 104;
+			b_avg = b_avg / 104;
+			glColor3f(r_avg, g_avg, b_avg);
 
-void display_cel_shade()
-{
-    // Some initial setup
-    glDisable(GL_LINE_SMOOTH);
-    glDisable(GL_LIGHTING);
+			GLfloat greyscale = (r_avg + g_avg + b_avg) / 3;
 
-    // Define the light direction
-    vector3 light_dir;
-    light_dir.x = 0;
-    light_dir.y = 0;
-    light_dir.z = -1;
-    normalize(light_dir);
+			glRasterPos2f(j, i);
 
-    // For storing vertices and normals
-    float temp_color;
-    vertex vertex0, vertex1, vertex2;
-    vector3 normal0, normal1, normal2;
+			if (greyscale > 0.5) {
+				//draw # character
+				glutBitmapCharacter(GLUT_BITMAP_8_BY_13, '#');
+			}
+			else if (greyscale > 0.35) {
+				//draw * character
+				glutBitmapCharacter(GLUT_BITMAP_8_BY_13, '*');
+			}
+			else if (greyscale > 0.25) {
+				//draw 8 character
+				glutBitmapCharacter(GLUT_BITMAP_8_BY_13, '8');
+			}
+			else if (greyscale > 0.15) {
+				//draw n character
+				glutBitmapCharacter(GLUT_BITMAP_8_BY_13, 'n');
+			}
+			else if (greyscale > 0.1) {
+				//draw : character
+				glutBitmapCharacter(GLUT_BITMAP_8_BY_13, ':');
+			}
+			else if (greyscale > 0) {
+				//draw . character
+				glutBitmapCharacter(GLUT_BITMAP_8_BY_13, '.');
+			}
+		}
+	}
 
-    // Clear the buffers
-    glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-    // Render?
-    glBegin(GL_TRIANGLES);
-    GLMgroup* group = model->groups;
-    for(int group_index = 0; group_index < model->numgroups; ++group_index)
-    {
-        for(int triangle = 0; triangle < group->numtriangles; ++triangle)
-        {
-            vertex0.x = model->vertices[3*model->triangles[group->triangles[triangle]].vindices[0]];
-            vertex0.y = model->vertices[3*model->triangles[group->triangles[triangle]].vindices[0] + 1];
-            vertex0.z = model->vertices[3*model->triangles[group->triangles[triangle]].vindices[0] + 2];
-
-        }
-    }
-
-    // This stuff is incomplete
-
-    glEnd();
-    glutSwapBuffers();
-
+	glRasterPos2i(0, 0); //reset raster pos, or else drawpixels will be off later
+	glMatrixMode(GL_PROJECTION);
+	glPopMatrix();
+	glMatrixMode(GL_MODELVIEW);
+	glPopMatrix();
+	glEnable(GL_DEPTH_TEST);
 }
 
 #define NUM_FRAMES 5
@@ -514,7 +510,7 @@ display(void)
     static char* p;
     static int frames = 0;
     
-    glClearColor(1.0, 1.0, 1.0, 1.0);
+    glClearColor(0.0, 0.0, 0.0, 0.0);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     
     glPushMatrix();
@@ -545,7 +541,7 @@ display(void)
 #endif
     
 	/* post-processing ascii affect*/
-	if (ascii) {
+	if (ascii == 1) {
 		asciiPostProcess();
 	}
 
@@ -564,9 +560,15 @@ display(void)
     }
     
     glPopMatrix();
-    
+
+	if (ascii == 2) {
+		asciiCharacterMode();
+	}
+	
+	
     if (stats) {
         /* XXX - this could be done a _whole lot_ faster... */
+		/*
         int height = glutGet(GLUT_WINDOW_HEIGHT);
         glColor3ub(0, 0, 0);
         sprintf(s, "%s\n%d vertices\n%d triangles\n%d normals\n"
@@ -575,9 +577,12 @@ display(void)
             model->numnormals, model->numtexcoords, model->numgroups,
             model->nummaterials);
         shadowtext(5, height-(5+18*1), s);
+		*/
     }
+	
 
     /* spit out frame rate. */
+	/*
     frames++;
     if (frames > NUM_FRAMES) {
         sprintf(t, "%g fps", frames/elapsed());
@@ -586,21 +591,11 @@ display(void)
     if (performance) {
         shadowtext(5, 5, t);
     }
+	*/
+
     
     glutSwapBuffers();
     glEnable(GL_LIGHTING);
-}
-
-void display_wrapper()
-{
-    if(cel_shading)
-    {
-        display_cel_shade();
-    }
-    else
-    {
-        display();
-    }
 }
 
 void
@@ -628,12 +623,11 @@ keyboard(unsigned char key, int x, int y)
         break;
 
 	case 'a':
-		ascii = !ascii;
+		ascii++;
+		if (ascii > 2) {
+			ascii = 0;
+		}
 		break;
-    
-    case 'q':
-        cel_shading = !cel_shading;
-        break;
         
     case 't':
         stats = !stats;
@@ -883,7 +877,7 @@ main(int argc, char** argv)
     glutCreateWindow("Smooth");
     
     glutReshapeFunc(reshape);
-    glutDisplayFunc(display_wrapper);
+    glutDisplayFunc(display);
     glutKeyboardFunc(keyboard);
     glutMouseFunc(mouse);
     glutMotionFunc(motion);
