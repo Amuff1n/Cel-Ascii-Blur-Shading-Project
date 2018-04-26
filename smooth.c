@@ -277,7 +277,7 @@ void blurringPostProcess() {
 
 void cel_shade_post_process()
 {
-    glClearColor(1.0f, 1.0f, 1.0f, 0.0f);
+    //glClearColor(1.0, 1.0, 1.0, 0.0);
     
     int height = glutGet(GLUT_WINDOW_HEIGHT);
     int width = glutGet(GLUT_WINDOW_WIDTH);
@@ -325,41 +325,41 @@ void cel_shade_post_process()
             GLfloat zavg = (z + zbuffer[i+1][j] + zbuffer[i][j+1] + zbuffer[i-1][j] + zbuffer[i][j-1]) / 5;
             if(zavg > 0.76f && zavg != 1.0f) 
             {
-                pixels[i][j][0] = 1.0f;
-			    pixels[i][j][1] = 1.0f;
-			    pixels[i][j][2] = 1.0f;
+                pixels[i][j][0] = 0.0f;
+			    pixels[i][j][1] = 0.0f;
+			    pixels[i][j][2] = 0.0f;
                 
-                pixels[i+1][j][0] = 1.0f;
-			    pixels[i+1][j][1] = 1.0f;
-			    pixels[i+1][j][2] = 1.0f;
+                pixels[i+1][j][0] = 0.0f;
+			    pixels[i+1][j][1] = 0.0f;
+			    pixels[i+1][j][2] = 0.0f;
 
-                pixels[i][j+1][0] = 1.0f;
-			    pixels[i][j+1][1] = 1.0f;
-			    pixels[i][j+1][2] = 1.0f;
+                pixels[i][j+1][0] = 0.0f;
+			    pixels[i][j+1][1] = 0.0f;
+			    pixels[i][j+1][2] = 0.0f;
 
-                pixels[i-1][j][0] = 1.0f;
-			    pixels[i-1][j][1] = 1.0f;
-			    pixels[i-1][j][2] = 1.0f;
+                pixels[i-1][j][0] = 0.0f;
+			    pixels[i-1][j][1] = 0.0f;
+			    pixels[i-1][j][2] = 0.0f;
 
-                pixels[i][j-1][0] = 1.0f;
-			    pixels[i][j-1][1] = 1.0f;
-			    pixels[i][j-1][2] = 1.0f;
+                pixels[i][j-1][0] = 0.0f;
+			    pixels[i][j-1][1] = 0.0f;
+			    pixels[i][j-1][2] = 0.0f;
                 
-                pixels[i+1][j+1][0] = 1.0f;
-			    pixels[i+1][j+1][1] = 1.0f;
-			    pixels[i+1][j+1][2] = 1.0f;
+                pixels[i+1][j+1][0] = 0.0f;
+			    pixels[i+1][j+1][1] = 0.0f;
+			    pixels[i+1][j+1][2] = 0.0f;
 
-                pixels[i+1][j-1][0] = 1.0f;
-			    pixels[i+1][j-1][1] = 1.0f;
-			    pixels[i+1][j-1][2] = 1.0f;
+                pixels[i+1][j-1][0] = 0.0f;
+			    pixels[i+1][j-1][1] = 0.0f;
+			    pixels[i+1][j-1][2] = 0.0f;
 
-                pixels[i-1][j+1][0] = 1.0f;
-			    pixels[i-1][j+1][1] = 1.0f;
-			    pixels[i-1][j+1][2] = 1.0f;
+                pixels[i-1][j+1][0] = 0.0f;
+			    pixels[i-1][j+1][1] = 0.0f;
+			    pixels[i-1][j+1][2] = 0.0f;
 
-                pixels[i-1][j-1][0] = 1.0f;
-			    pixels[i-1][j-1][1] = 1.0f;
-			    pixels[i-1][j-1][2] = 1.0f;
+                pixels[i-1][j-1][0] = 0.0f;
+			    pixels[i-1][j-1][1] = 0.0f;
+			    pixels[i-1][j-1][2] = 0.0f;
             }
         }
     }
@@ -613,7 +613,7 @@ display(void)
     static char* p;
     static int frames = 0;
     
-    glClearColor(0.0, 0.0, 0.0, 0.0);
+    glClearColor(1.0, 1.0, 1.0, 0.0);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     
     glPushMatrix();
@@ -1034,6 +1034,7 @@ main(int argc, char** argv)
     glutAddMenuEntry("[-]   Decrease smoothing angle", '-');
     glutAddMenuEntry("[W]   Write model to file (out.obj)", 'W');
 	glutAddMenuEntry("[a]   Toggle ascii effect", 'a');
+	glutAddMenuEntry("[q]   Toggle cel-shading", 'q');
     glutAddMenuEntry("", 0);
     glutAddMenuEntry("[Esc] Quit", 27);
     glutAttachMenu(GLUT_RIGHT_BUTTON);
