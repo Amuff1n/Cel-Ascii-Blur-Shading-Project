@@ -11,7 +11,13 @@
 #include <stdlib.h>
 #include <assert.h>
 #include <stdarg.h>
+
+#ifdef __APPLE__ 
+#include <GLUT/glut.h>
+#else
 #include <GL/glut.h>
+#endif
+
 #include "gltb.h"
 #include "glm.h"
 #include "dirent32.h"
@@ -271,9 +277,13 @@ void blurringPostProcess() {
 
 void cel_shade_post_process()
 {
+    glClearColor(1.0f, 1.0f, 1.0f, 0.0f);
+    
     int height = glutGet(GLUT_WINDOW_HEIGHT);
     int width = glutGet(GLUT_WINDOW_WIDTH);
     static GLfloat pixels[512][512][3];
+    static GLfloat zbuffer[512][512];
+    glReadPixels(0, 0, width, height, GL_DEPTH_COMPONENT, GL_FLOAT, zbuffer);
     glReadPixels(0, 0, width, height, GL_RGB, GL_FLOAT, pixels);
 
     for(int i = 0; i < width; i ++)
@@ -305,7 +315,57 @@ void cel_shade_post_process()
 			pixels[i][j][2] = b;
         }
     }
+
+    for(int i = 0; i < width; ++i) 
+    {
+        for(int j = 0; j < height; ++j)
+        {
+
+            GLfloat z = zbuffer[i][j];
+            GLfloat zavg = (z + zbuffer[i+1][j] + zbuffer[i][j+1] + zbuffer[i-1][j] + zbuffer[i][j-1]) / 5;
+            if(zavg > 0.76f && zavg != 1.0f) 
+            {
+                pixels[i][j][0] = 1.0f;
+			    pixels[i][j][1] = 1.0f;
+			    pixels[i][j][2] = 1.0f;
+                
+                pixels[i+1][j][0] = 1.0f;
+			    pixels[i+1][j][1] = 1.0f;
+			    pixels[i+1][j][2] = 1.0f;
+
+                pixels[i][j+1][0] = 1.0f;
+			    pixels[i][j+1][1] = 1.0f;
+			    pixels[i][j+1][2] = 1.0f;
+
+                pixels[i-1][j][0] = 1.0f;
+			    pixels[i-1][j][1] = 1.0f;
+			    pixels[i-1][j][2] = 1.0f;
+
+                pixels[i][j-1][0] = 1.0f;
+			    pixels[i][j-1][1] = 1.0f;
+			    pixels[i][j-1][2] = 1.0f;
+                
+                pixels[i+1][j+1][0] = 1.0f;
+			    pixels[i+1][j+1][1] = 1.0f;
+			    pixels[i+1][j+1][2] = 1.0f;
+
+                pixels[i+1][j-1][0] = 1.0f;
+			    pixels[i+1][j-1][1] = 1.0f;
+			    pixels[i+1][j-1][2] = 1.0f;
+
+                pixels[i-1][j+1][0] = 1.0f;
+			    pixels[i-1][j+1][1] = 1.0f;
+			    pixels[i-1][j+1][2] = 1.0f;
+
+                pixels[i-1][j-1][0] = 1.0f;
+			    pixels[i-1][j-1][1] = 1.0f;
+			    pixels[i-1][j-1][2] = 1.0f;
+            }
+        }
+    }
+
     glDrawPixels(width, height, GL_RGB, GL_FLOAT, pixels);
+
 }
 
 void asciiPostProcess() {
