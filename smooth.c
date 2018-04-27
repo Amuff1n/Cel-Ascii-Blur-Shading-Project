@@ -47,8 +47,9 @@ GLdouble   pan_z = 0.0;
 
 static GLfloat pixels[512][512][3];
 
+// WINDOWS BELOW
 
-#if defined(_WIN32)
+/*#if defined(_WIN32)
 #include <sys/timeb.h>
 #define CLK_TCK 1000
 #else
@@ -56,7 +57,17 @@ static GLfloat pixels[512][512][3];
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/times.h>
-#endif
+#endif*/
+
+// LINUX BELOW
+
+#define CLK_TCK 1000
+#include <limits.h>
+#include <unistd.h>
+#include <sys/types.h>
+#include <sys/times.h>
+
+
 float
 elapsed(void)
 {
@@ -246,9 +257,30 @@ void blurringPostProcess() {
 	int height = glutGet(GLUT_WINDOW_HEIGHT);
 	int width = glutGet(GLUT_WINDOW_WIDTH);
 
-	GLfloat boxFilter[3][3] = { { 0.111f, 0.111f, 0.111f },{ 0.111f, 0.111f, 0.111f },{ 0.111f, 0.111f, 0.111f } };
-	//GLfloat boxFilter[3][3] = { { 0.1f, 0.1f, 0.1f },{ 0.1f, 0.1f, 0.1f },{ 0.1f, 0.1f, 0.1f } };
+	static GLfloat zbuffer[512][512];
+	glReadPixels(0, 0, width, height, GL_DEPTH_COMPONENT, GL_FLOAT, zbuffer);
+
+	//GLfloat boxFilter[3][3] = { { 0.111f, 0.111f, 0.111f },{ 0.111f, 0.111f, 0.111f },{ 0.111f, 0.111f, 0.111f } };
+	GLfloat boxFilter[3][3] = { { 0.1f, 0.1f, 0.1f },{ 0.1f, 0.1f, 0.1f },{ 0.1f, 0.1f, 0.1f } };
 	GLfloat gaussianFilter[3][3] = { { 0.0625f, 0.125f, 0.0625f },{ 0.125f, 0.25f, 0.125f },{ 0.0625f, 0.125f, 0.0625f } };
+	
+	if(blurring > 2)
+	{
+		glColor4f(1,1,0,1);
+
+		glBegin(GL_POLYGON);
+		glVertex3f(0.25, 0.25, -0.5);
+		glVertex3f(0.75, 0.25, -0.5);
+		glVertex3f(0.75, 0.75, -0.5);
+		glVertex3f(0.25, 0.75, -0.5);
+		glEnd();
+
+		glBegin(GL_POLYGON);
+		glVertex3f(-1.0, -1.0, -1.0);
+		glVertex3f(1.0, -1.0, -1.0);
+		glVertex3f(0.0, 0.0, -1.0);
+		glEnd();
+	}
 
 	glReadPixels(0, 0, width, height, GL_RGB, GL_FLOAT, pixels);
 
@@ -256,7 +288,7 @@ void blurringPostProcess() {
 	if (blurring == 1) {
 		filter = boxFilter;
 	}
-	else if (blurring == 2) {
+	else if (blurring > 1) {
 		filter = gaussianFilter;
 	}
 
@@ -266,12 +298,21 @@ void blurringPostProcess() {
 		{
 			GLfloat value[3] = { blurR(x, y, pixels, filter), blurG(x, y, pixels, filter), blurB(x, y, pixels, filter) };
 
-			pixels[x][y][0] = value[0];		// red		(channel 0)
-			pixels[x][y][1] = value[1];		// green	(channel 1)
-			pixels[x][y][2] = value[2];		// blue		(channel 2)			
+			if(blurring == 4 && zbuffer[x][y] > 0.9)
+			{
+				pixels[x][y][0] = value[0];		// red		(channel 0)
+				pixels[x][y][1] = value[1];		// green	(channel 1)
+				pixels[x][y][2] = value[2];		// blue		(channel 2)
+			}
+			else if(blurring < 3)
+			{
+				pixels[x][y][0] = value[0];		// red		(channel 0)
+				pixels[x][y][1] = value[1];		// green	(channel 1)
+				pixels[x][y][2] = value[2];		// blue		(channel 2)
+			}
 		}
 	}
-
+	
 	glDrawPixels(width, height, GL_RGB, GL_FLOAT, pixels);
 }
 
@@ -792,7 +833,7 @@ keyboard(unsigned char key, int x, int y)
     
 	case 'B':
 		blurring++;
-		if (blurring > 2) {
+		if (blurring > 4) {
 			blurring = 0;
 		}
 		break;
