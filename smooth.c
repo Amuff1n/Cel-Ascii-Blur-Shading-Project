@@ -299,15 +299,20 @@ void cel_shade_post_process()
 
 			GLfloat greyscale = (r + g + b) / 3;
 
-			if (greyscale > 0.5) {
-				r = r;
-				g = g;
-				b = b;
+			if (greyscale > 0.73) {
+                r = 1.0;
+                g = 1.0;
+                b = 1.0;
 			}
-			else {
-				r = r * 0.75;
-				g = g * 0.75;
-				b = b * 0.75;
+			else if (greyscale < 0.73 && greyscale >= 0.35){
+				r = r + 0.15;
+				g = g + 0.15;
+				b = b + 0.15;
+			}
+            else if (greyscale < 0.35){
+				r = 0.0;
+				g = 0.0;
+				b = 0.0;
 			}
 
 			pixels[i][j][0] = r;
@@ -316,6 +321,7 @@ void cel_shade_post_process()
         }
     }
 
+    // Draw the outline
     for(int i = 0; i < width; ++i) 
     {
         for(int j = 0; j < height; ++j)
